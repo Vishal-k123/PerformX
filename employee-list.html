@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Employees</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item" onclick="location.href='dashboard.html'"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item active"><span class="nav-icon">👥</span> Employees</div>
+      <div class="nav-item" onclick="location.href='employee-form.html'"><span class="nav-icon">➕</span> Add Employee</div>
+      <div class="nav-item" onclick="location.href='attendance.html'"><span class="nav-icon">⏰</span> Attendance</div>
+      <div class="sidebar-section-label">Reports</div>
+      <div class="nav-item" onclick="location.href='salary.html'"><span class="nav-icon">💰</span> Salary</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div><div class="user-name">Administrator</div><div class="user-role">System Admin</div></div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2>All Employees</h2>
+        <p id="count-label">Loading...</p>
+      </div>
+      <div class="topbar-actions">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search" placeholder="Search by name, ID, department..." oninput="filterTable()"/>
+        </div>
+        <select id="dept-filter" onchange="filterTable()" style="padding:10px 14px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px">
+          <option value="">All Departments</option>
+          <option>Engineering</option><option>HR</option><option>Finance</option>
+          <option>Marketing</option><option>Sales</option><option>Operations</option>
+          <option>IT</option><option>Legal</option><option>Design</option>
+        </select>
+        <button class="btn btn-primary-filled" onclick="location.href='employee-form.html'">➕ Add Employee</button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="card">
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Name & Email</th>
+                <th>Department</th>
+                <th>Designation</th>
+                <th>Status</th>
+                <th>Daily Rate</th>
+                <th>Joined</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="emp-table">
+              <tr><td colspan="8" class="text-center text-muted" style="padding:40px">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- EMPLOYEE DETAIL MODAL -->
+<div class="modal-overlay hidden" id="emp-modal">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <h3 id="modal-title">Employee Details</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary-filled" id="modal-punch-btn">⏰ Attendance</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+PX.requireAdmin();
+
+let allEmps = [];
+
+function loadTable() {
+  allEmps = PX.getAllEmployees();
+  document.getElementById('count-label').textContent = `${allEmps.length} employee${allEmps.length!==1?'s':''} registered`;
+  renderTable(allEmps);
+}
+
+function renderTable(emps) {
+  const tbody = document.getElementById('emp-table');
+  if (emps.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:40px">No employees found. <a href="employee-form.html" style="color:var(--accent)">Add one →</a></td></tr>';
+    return;
+  }
+  tbody.innerHTML = emps.map(emp => {
+    const initials = emp.first_name[0] + emp.last_name[0];
+    const badge = emp.status === 'Active'
+      ? '<span class="badge badge-success">Active</span>'
+      : '<span class="badge badge-danger">Inactive</span>';
+    return `<tr>
+      <td><span class="emp-id-badge">${emp.employee_id}</span></td>
+      <td>
+        <div class="flex gap-12" style="align-items:center">
+          <div class="user-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${initials}</div>
+          <div>
+            <div class="fw-600">${emp.first_name} ${emp.last_name}</div>
+            <div class="text-sm text-muted">${emp.email}</div>
+          </div>
+        </div>
+      </td>
+      <td>${emp.department||'-'}</td>
+      <td>${emp.designation||'-'}</td>
+      <td>${badge}</td>
+      <td>₹${Number(emp.daily_rate||0).toLocaleString('en-IN')}/day</td>
+      <td>${emp.date_of_joining||'-'}</td>
+      <td>
+        <div class="flex gap-8">
+          <button class="btn btn-sm btn-outline" onclick="viewEmployee('${emp.employee_id}')">👁 View</button>
+          <button class="btn btn-sm btn-primary-filled" onclick="attendanceFor('${emp.employee_id}')">⏰ Punch</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const dept = document.getElementById('dept-filter').value;
+  const filtered = allEmps.filter(e => {
+    const match = (e.first_name+' '+e.last_name+' '+e.employee_id+' '+e.email+(e.department||'')).toLowerCase().includes(q);
+    const deptMatch = !dept || e.department === dept;
+    return match && deptMatch;
+  });
+  renderTable(filtered);
+}
+
+function viewEmployee(empId) {
+  const emp  = PX.getEmployee(empId);
+  if (!emp) return;
+  const edu  = PX.getEducation(empId);
+  const exp  = PX.getExperience(empId);
+  const hist = PX.getHistory(empId);
+  const initials = emp.first_name[0] + emp.last_name[0];
+
+  document.getElementById('modal-title').textContent = `${emp.first_name} ${emp.last_name}`;
+  document.getElementById('modal-punch-btn').onclick = () => attendanceFor(empId);
+
+  document.getElementById('modal-body').innerHTML = `
+    <!-- Profile Hero -->
+    <div style="background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--radius);padding:24px;display:flex;align-items:center;gap:20px;color:white;margin-bottom:20px">
+      <div class="user-avatar" style="width:70px;height:70px;font-size:26px;border:3px solid rgba(255,255,255,0.2)">${initials}</div>
+      <div>
+        <div style="font-size:22px;font-weight:800">${emp.first_name} ${emp.last_name}</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:13px">${emp.designation||'—'} · ${emp.department||'—'}</div>
+        <div style="font-family:var(--mono);font-size:13px;background:rgba(59,130,246,0.25);color:var(--accent);padding:3px 10px;border-radius:6px;display:inline-block;margin-top:6px">${emp.employee_id}</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'tab-personal')">👤 Personal</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-edu')">🎓 Education</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-exp')">🏢 Experience</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-hist')">📋 History</button>
+    </div>
+
+    <!-- Personal -->
+    <div class="tab-panel active" id="tab-personal">
+      <div class="info-grid" style="gap:16px">
+        <div class="info-item"><div class="info-label">Email</div><div class="info-value">${emp.email||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${emp.phone||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${emp.date_of_birth||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Gender</div><div class="info-value">${emp.gender||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Blood Group</div><div class="info-value">${emp.blood_group||'—'}</div></div>
+        <div class="info-item"><div class="info-label">City / State</div><div class="info-value">${[emp.city,emp.state].filter(Boolean).join(', ')||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Employment Type</div><div class="info-value">${emp.employment_type||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Daily Rate</div><div class="info-value fw-700" style="color:var(--success)">₹${Number(emp.daily_rate||0).toLocaleString('en-IN')}</div></div>
+        <div class="info-item"><div class="info-label">Joined</div><div class="info-value">${emp.date_of_joining||'—'}</div></div>
+        <div class="info-item"><div class="info-label">Status</div><div class="info-value">${emp.status==='Active'?'<span class="badge badge-success">Active</span>':'<span class="badge badge-danger">Inactive</span>'}</div></div>
+      </div>
+    </div>
+
+    <!-- Education -->
+    <div class="tab-panel" id="tab-edu">
+      ${edu.length ? edu.map(e => `
+        <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">
+          <div class="fw-700">${e.degree||'—'}</div>
+          <div class="text-sm text-muted">${e.institution||'—'}</div>
+          <div class="flex gap-16 mt-16" style="flex-wrap:wrap">
+            <div class="info-item"><div class="info-label">Board / Univ</div><div class="info-value">${e.board_university||'—'}</div></div>
+            <div class="info-item"><div class="info-label">Year</div><div class="info-value">${e.year_of_passing||'—'}</div></div>
+            <div class="info-item"><div class="info-label">Score</div><div class="info-value">${e.percentage_grade||'—'}</div></div>
+          </div>
+        </div>`).join('') : '<div class="text-muted text-center" style="padding:24px">No education records</div>'}
+    </div>
+
+    <!-- Experience -->
+    <div class="tab-panel" id="tab-exp">
+      ${exp.length ? exp.map(e => `
+        <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px">
+          <div class="fw-700">${e.company_name||'—'}</div>
+          <div class="text-sm text-muted">${e.designation||'—'} · ${e.years_of_experience||0} yrs</div>
+          <div class="flex gap-16 mt-16" style="flex-wrap:wrap">
+            <div class="info-item"><div class="info-label">Period</div><div class="info-value">${e.start_date||'—'} → ${e.end_date||'—'}</div></div>
+            <div class="info-item"><div class="info-label">Left Because</div><div class="info-value">${e.reason_for_leaving||'—'}</div></div>
+          </div>
+          ${e.responsibilities?`<div class="mt-16"><div class="info-label">Responsibilities</div><div class="text-sm" style="margin-top:4px">${e.responsibilities}</div></div>`:''}
+          ${e.feedback?`<div class="mt-16" style="background:#eff6ff;border-radius:var(--radius-sm);padding:12px"><div class="info-label" style="color:var(--accent)">Previous Company Feedback</div><div class="text-sm" style="margin-top:4px">${e.feedback}</div></div>`:''}
+        </div>`).join('') : '<div class="text-muted text-center" style="padding:24px">No experience records — Fresher</div>'}
+    </div>
+
+    <!-- History -->
+    <div class="tab-panel" id="tab-hist">
+      ${hist.length ? hist.map(h => `
+        <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--gray-200)">
+          <div style="width:36px;height:36px;background:rgba(59,130,246,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:14px;flex-shrink:0">📌</div>
+          <div>
+            <div class="fw-600">${h.event_type}</div>
+            <div class="text-sm text-muted">${h.description||'—'}</div>
+            <div class="text-sm text-muted" style="margin-top:4px">${h.effective_date||'—'} · By ${h.recorded_by||'admin'}</div>
+          </div>
+        </div>`).join('') : '<div class="text-muted text-center" style="padding:24px">No history records</div>'}
+    </div>
+  `;
+  document.getElementById('emp-modal').classList.remove('hidden');
+}
+
+function switchTab(btn, panelId) {
+  btn.closest('.modal-body').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.modal-body').querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+function closeModal() { document.getElementById('emp-modal').classList.add('hidden'); }
+
+function attendanceFor(empId) {
+  closeModal();
+  location.href = `attendance.html?emp=${empId}`;
+}
+
+loadTable();
+</script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Add Employee</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <style>
+    .exp-section, .edu-section {
+      background: var(--gray-100); border-radius: var(--radius-sm);
+      padding: 20px; margin-bottom: 16px; position: relative;
+    }
+    .remove-btn {
+      position: absolute; top: 14px; right: 14px;
+      background: var(--danger); color: white; border: none;
+      border-radius: 50%; width: 28px; height: 28px;
+      cursor: pointer; font-size: 14px;
+    }
+    .success-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center; z-index: 999;
+    }
+    .success-overlay.hidden { display: none; }
+    .success-card {
+      background: white; border-radius: var(--radius);
+      padding: 48px; text-align: center; max-width: 440px; width: 90%;
+      box-shadow: var(--shadow-lg);
+    }
+    .success-icon { font-size: 64px; margin-bottom: 16px; }
+    .success-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .success-card p  { color: var(--gray-400); margin-bottom: 24px; }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item" onclick="location.href='dashboard.html'"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="location.href='employee-list.html'"><span class="nav-icon">👥</span> Employees</div>
+      <div class="nav-item active" onclick="location.href='employee-form.html'"><span class="nav-icon">➕</span> Add Employee</div>
+      <div class="nav-item" onclick="location.href='attendance.html'"><span class="nav-icon">⏰</span> Attendance</div>
+      <div class="sidebar-section-label">Reports</div>
+      <div class="nav-item" onclick="location.href='salary.html'"><span class="nav-icon">💰</span> Salary</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div><div class="user-name">Administrator</div><div class="user-role">System Admin</div></div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2>Add New Employee</h2>
+        <p>Fill all sections to register a new employee</p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-outline" onclick="location.href='employee-list.html'">← Back to List</button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div class="form-page">
+
+        <!-- STEP INDICATOR -->
+        <div class="form-steps">
+          <div class="step-item">
+            <div class="step-circle active" id="s1">1</div>
+            <div class="step-label active" id="sl1">Personal</div>
+          </div>
+          <div class="step-divider" id="sd1"></div>
+          <div class="step-item">
+            <div class="step-circle" id="s2">2</div>
+            <div class="step-label" id="sl2">Job Details</div>
+          </div>
+          <div class="step-divider" id="sd2"></div>
+          <div class="step-item">
+            <div class="step-circle" id="s3">3</div>
+            <div class="step-label" id="sl3">Education</div>
+          </div>
+          <div class="step-divider" id="sd3"></div>
+          <div class="step-item">
+            <div class="step-circle" id="s4">4</div>
+            <div class="step-label" id="sl4">Experience</div>
+          </div>
+          <div class="step-divider" id="sd4"></div>
+          <div class="step-item">
+            <div class="step-circle" id="s5">5</div>
+            <div class="step-label" id="sl5">Salary & Finish</div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 1: PERSONAL INFO ── -->
+        <div class="form-section" id="section-1">
+          <div class="form-section-header">
+            <div class="section-icon">👤</div>
+            <div>
+              <h3>Personal Information</h3>
+              <p>Basic personal and contact details</p>
+            </div>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="field-group">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" id="f-first_name" placeholder="Rahul"/>
+              </div>
+              <div class="field-group">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" id="f-last_name" placeholder="Sharma"/>
+              </div>
+              <div class="field-group">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" id="f-email" placeholder="rahul@example.com"/>
+              </div>
+              <div class="field-group">
+                <label>Phone Number <span class="req">*</span></label>
+                <input type="tel" id="f-phone" placeholder="9876543210"/>
+              </div>
+              <div class="field-group">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" id="f-date_of_birth"/>
+                <small style="color:var(--gray-400);font-size:11px;margin-top:4px;display:block">Birth year will be used as employee login password</small>
+              </div>
+              <div class="field-group">
+                <label>Gender</label>
+                <select id="f-gender">
+                  <option value="">Select Gender</option>
+                  <option>Male</option><option>Female</option><option>Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Blood Group</label>
+                <select id="f-blood_group">
+                  <option value="">Select Blood Group</option>
+                  <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                  <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+                </select>
+              </div>
+              <div class="field-group span-2">
+                <label>Residential Address</label>
+                <textarea id="f-address" placeholder="House No., Street, Area..."></textarea>
+              </div>
+              <div class="field-group">
+                <label>City</label>
+                <input type="text" id="f-city" placeholder="Mumbai"/>
+              </div>
+              <div class="field-group">
+                <label>State</label>
+                <input type="text" id="f-state" placeholder="Maharashtra"/>
+              </div>
+              <div class="field-group">
+                <label>PIN Code</label>
+                <input type="text" id="f-pincode" placeholder="400001" maxlength="6"/>
+              </div>
+            </div>
+            <div class="flex-between mt-24">
+              <div></div>
+              <button class="btn btn-primary-filled btn-lg" onclick="goStep(2)">Next: Job Details →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 2: JOB DETAILS ── -->
+        <div class="form-section hidden" id="section-2">
+          <div class="form-section-header">
+            <div class="section-icon">💼</div>
+            <div><h3>Job Details</h3><p>Department, designation and employment info</p></div>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="field-group">
+                <label>Department <span class="req">*</span></label>
+                <select id="f-department">
+                  <option value="">Select Department</option>
+                  <option>Engineering</option><option>HR</option><option>Finance</option>
+                  <option>Marketing</option><option>Sales</option><option>Operations</option>
+                  <option>IT</option><option>Legal</option><option>Design</option><option>Other</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Designation <span class="req">*</span></label>
+                <input type="text" id="f-designation" placeholder="Software Developer"/>
+              </div>
+              <div class="field-group">
+                <label>Date of Joining <span class="req">*</span></label>
+                <input type="date" id="f-date_of_joining"/>
+              </div>
+              <div class="field-group">
+                <label>Employment Type</label>
+                <select id="f-employment_type">
+                  <option>Full-Time</option><option>Part-Time</option>
+                  <option>Contract</option><option>Intern</option>
+                </select>
+              </div>
+              <div class="field-group">
+                <label>Reporting Manager</label>
+                <input type="text" id="f-manager" placeholder="Manager Name"/>
+              </div>
+              <div class="field-group">
+                <label>Work Location</label>
+                <input type="text" id="f-location" placeholder="Head Office / Remote"/>
+              </div>
+            </div>
+            <div class="flex-between mt-24">
+              <button class="btn btn-outline btn-lg" onclick="goStep(1)">← Back</button>
+              <button class="btn btn-primary-filled btn-lg" onclick="goStep(3)">Next: Education →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 3: EDUCATION ── -->
+        <div class="form-section hidden" id="section-3">
+          <div class="form-section-header">
+            <div class="section-icon">🎓</div>
+            <div><h3>Education Details</h3><p>Academic qualifications</p></div>
+          </div>
+          <div class="form-section-body">
+            <div id="edu-list">
+              <!-- Education entries added dynamically -->
+            </div>
+            <button class="btn btn-outline" onclick="addEduRow()">➕ Add Education</button>
+            <div class="flex-between mt-24">
+              <button class="btn btn-outline btn-lg" onclick="goStep(2)">← Back</button>
+              <button class="btn btn-primary-filled btn-lg" onclick="goStep(4)">Next: Experience →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 4: WORK EXPERIENCE ── -->
+        <div class="form-section hidden" id="section-4">
+          <div class="form-section-header">
+            <div class="section-icon">🏢</div>
+            <div><h3>Work Experience</h3><p>Previous employment history & company feedback</p></div>
+          </div>
+          <div class="form-section-body">
+            <div class="field-group mb-20">
+              <label>Does the employee have prior work experience?</label>
+              <select id="has-exp" onchange="toggleExp()">
+                <option value="no">No — Fresher</option>
+                <option value="yes">Yes — Has Experience</option>
+              </select>
+            </div>
+            <div id="exp-container" class="hidden">
+              <div id="exp-list"></div>
+              <button class="btn btn-outline" onclick="addExpRow()">➕ Add Previous Company</button>
+            </div>
+            <div class="flex-between mt-24">
+              <button class="btn btn-outline btn-lg" onclick="goStep(3)">← Back</button>
+              <button class="btn btn-primary-filled btn-lg" onclick="goStep(5)">Next: Salary →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION 5: SALARY & SUBMIT ── -->
+        <div class="form-section hidden" id="section-5">
+          <div class="form-section-header">
+            <div class="section-icon">💰</div>
+            <div><h3>Salary & Final Review</h3><p>Set salary package and submit</p></div>
+          </div>
+          <div class="form-section-body">
+            <div class="form-grid">
+              <div class="field-group">
+                <label>Daily Rate (₹) <span class="req">*</span></label>
+                <input type="number" id="f-daily_rate" placeholder="1000" value="1000" oninput="updateCalc()"/>
+                <small style="color:var(--gray-400);font-size:11px;margin-top:4px;display:block">Amount paid per working day (8 hours)</small>
+              </div>
+              <div class="field-group">
+                <label>Calculated Hourly Rate</label>
+                <input type="text" id="f-hourly_rate" readonly style="background:var(--gray-100);cursor:not-allowed"/>
+              </div>
+            </div>
+
+            <!-- Salary preview -->
+            <div style="background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--radius);padding:24px;margin:24px 0;color:white">
+              <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px">Monthly Estimate (26 working days)</div>
+              <div style="font-family:var(--mono);font-size:36px;font-weight:700" id="monthly-est">₹26,000</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px">Based on daily rate × 26 days</div>
+            </div>
+
+            <!-- FINAL REVIEW -->
+            <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:20px;margin-bottom:20px">
+              <h4 style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--gray-800)">📋 Review Before Submitting</h4>
+              <div class="info-grid" id="review-box" style="gap:12px"></div>
+            </div>
+
+            <div class="flex-between">
+              <button class="btn btn-outline btn-lg" onclick="goStep(4)">← Back</button>
+              <button class="btn btn-primary-filled btn-lg" onclick="submitEmployee()">
+                ✅ Register Employee
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay hidden" id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon">🎉</div>
+    <h2>Employee Registered!</h2>
+    <p>The employee has been successfully added to the system.</p>
+    <div class="id-card" style="margin-bottom:24px">
+      <div style="font-size:13px;color:rgba(255,255,255,0.5)">Employee ID Generated</div>
+      <div class="generated-id" id="generated-id">PX-2024-002</div>
+      <p style="font-size:12px;margin-top:8px">Share this ID with the employee for login</p>
+    </div>
+    <div class="flex gap-12" style="justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="location.href='employee-list.html'">View All Employees</button>
+      <button class="btn btn-primary-filled" onclick="location.reload()">Add Another</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+PX.requireAdmin();
+
+let currentStep = 1;
+let eduCount = 0, expCount = 0;
+
+// Add one default edu row on load
+addEduRow();
+
+function goStep(step) {
+  if (step > currentStep && !validateStep(currentStep)) return;
+  // Mark old step done
+  document.getElementById(`s${currentStep}`).classList.remove('active');
+  document.getElementById(`sl${currentStep}`).classList.remove('active');
+  if (step > currentStep) {
+    document.getElementById(`s${currentStep}`).classList.add('done');
+    document.getElementById(`s${currentStep}`).textContent = '✓';
+    document.getElementById(`sl${currentStep}`).classList.add('done');
+    for (let i = currentStep; i < step; i++) {
+      document.getElementById(`sd${i}`)?.classList.add('done');
+    }
+  }
+  document.getElementById(`section-${currentStep}`).classList.add('hidden');
+  currentStep = step;
+  document.getElementById(`section-${currentStep}`).classList.remove('hidden');
+  document.getElementById(`s${currentStep}`).classList.add('active');
+  document.getElementById(`sl${currentStep}`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (currentStep === 5) buildReview();
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    const req = ['f-first_name','f-last_name','f-email','f-phone','f-date_of_birth'];
+    for (const id of req) {
+      if (!document.getElementById(id).value.trim()) {
+        PX.showToast('Please fill all required fields (marked with *)', 'warning');
+        document.getElementById(id).focus();
+        return false;
+      }
+    }
+  }
+  if (step === 2) {
+    if (!document.getElementById('f-department').value) { PX.showToast('Please select a Department', 'warning'); return false; }
+    if (!document.getElementById('f-designation').value.trim()) { PX.showToast('Please enter Designation', 'warning'); return false; }
+    if (!document.getElementById('f-date_of_joining').value) { PX.showToast('Please enter Date of Joining', 'warning'); return false; }
+  }
+  return true;
+}
+
+function addEduRow() {
+  eduCount++;
+  const n = eduCount;
+  const div = document.createElement('div');
+  div.className = 'edu-section'; div.id = `edu-${n}`;
+  div.innerHTML = `
+    ${n > 1 ? `<button class="remove-btn" onclick="removeEdu(${n})">✕</button>` : ''}
+    <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:14px">Education ${n}</div>
+    <div class="form-grid">
+      <div class="field-group">
+        <label>Degree / Certificate</label>
+        <select id="edu-degree-${n}">
+          <option value="">Select Degree</option>
+          <option>10th (SSC)</option><option>12th (HSC)</option>
+          <option>Diploma</option><option>B.A.</option><option>B.Com.</option><option>B.Sc.</option>
+          <option>B.Tech / B.E.</option><option>BBA</option><option>BCA</option>
+          <option>M.A.</option><option>M.Com.</option><option>M.Sc.</option>
+          <option>M.Tech / M.E.</option><option>MBA</option><option>MCA</option>
+          <option>Ph.D.</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Institution / School / College</label>
+        <input type="text" id="edu-inst-${n}" placeholder="Mumbai University"/>
+      </div>
+      <div class="field-group">
+        <label>Board / University</label>
+        <input type="text" id="edu-board-${n}" placeholder="Maharashtra SSC Board"/>
+      </div>
+      <div class="field-group">
+        <label>Year of Passing</label>
+        <input type="number" id="edu-year-${n}" placeholder="2022" min="1990" max="2030"/>
+      </div>
+      <div class="field-group">
+        <label>Percentage / Grade / CGPA</label>
+        <input type="text" id="edu-grade-${n}" placeholder="78% or 8.5 CGPA"/>
+      </div>
+    </div>`;
+  document.getElementById('edu-list').appendChild(div);
+}
+
+function removeEdu(n) { document.getElementById(`edu-${n}`)?.remove(); }
+
+function toggleExp() {
+  const hasExp = document.getElementById('has-exp').value === 'yes';
+  document.getElementById('exp-container').classList.toggle('hidden', !hasExp);
+  if (hasExp && expCount === 0) addExpRow();
+}
+
+function addExpRow() {
+  expCount++;
+  const n = expCount;
+  const div = document.createElement('div');
+  div.className = 'exp-section'; div.id = `exp-${n}`;
+  div.innerHTML = `
+    ${n > 1 ? `<button class="remove-btn" onclick="removeExp(${n})">✕</button>` : ''}
+    <div style="font-size:13px;font-weight:700;color:var(--gray-600);margin-bottom:14px">Previous Company ${n}</div>
+    <div class="form-grid">
+      <div class="field-group">
+        <label>Company Name</label>
+        <input type="text" id="exp-company-${n}" placeholder="TechStart Pvt Ltd"/>
+      </div>
+      <div class="field-group">
+        <label>Designation Held</label>
+        <input type="text" id="exp-desig-${n}" placeholder="Junior Developer"/>
+      </div>
+      <div class="field-group">
+        <label>Start Date</label>
+        <input type="date" id="exp-start-${n}"/>
+      </div>
+      <div class="field-group">
+        <label>End Date</label>
+        <input type="date" id="exp-end-${n}"/>
+      </div>
+      <div class="field-group">
+        <label>Years of Experience</label>
+        <input type="number" id="exp-years-${n}" placeholder="1.5" step="0.5" min="0" max="50"/>
+      </div>
+      <div class="field-group">
+        <label>Reason for Leaving</label>
+        <input type="text" id="exp-reason-${n}" placeholder="Better opportunity"/>
+      </div>
+      <div class="field-group span-2">
+        <label>Key Responsibilities</label>
+        <textarea id="exp-resp-${n}" placeholder="Describe main duties and achievements..."></textarea>
+      </div>
+      <div class="field-group span-2">
+        <label>📝 Previous Company Feedback / Reference</label>
+        <textarea id="exp-feedback-${n}" placeholder="What did the previous employer say about this employee? (performance, behaviour, teamwork...)"></textarea>
+      </div>
+    </div>`;
+  document.getElementById('exp-list').appendChild(div);
+}
+
+function removeExp(n) { document.getElementById(`exp-${n}`)?.remove(); }
+
+function updateCalc() {
+  const daily  = parseFloat(document.getElementById('f-daily_rate').value) || 0;
+  const hourly = daily / 8;
+  document.getElementById('f-hourly_rate').value = `₹${hourly.toFixed(2)}/hour`;
+  document.getElementById('monthly-est').textContent = `₹${(daily * 26).toLocaleString('en-IN')}`;
+}
+updateCalc();
+
+function val(id) { return document.getElementById(id)?.value || ''; }
+
+function buildReview() {
+  document.getElementById('review-box').innerHTML = `
+    <div class="info-item"><div class="info-label">Full Name</div><div class="info-value">${val('f-first_name')} ${val('f-last_name')}</div></div>
+    <div class="info-item"><div class="info-label">Email</div><div class="info-value">${val('f-email')}</div></div>
+    <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${val('f-phone')}</div></div>
+    <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${val('f-date_of_birth')}</div></div>
+    <div class="info-item"><div class="info-label">Department</div><div class="info-value">${val('f-department')}</div></div>
+    <div class="info-item"><div class="info-label">Designation</div><div class="info-value">${val('f-designation')}</div></div>
+    <div class="info-item"><div class="info-label">Joining Date</div><div class="info-value">${val('f-date_of_joining')}</div></div>
+    <div class="info-item"><div class="info-label">Daily Rate</div><div class="info-value">₹${val('f-daily_rate')}</div></div>
+  `;
+}
+
+function submitEmployee() {
+  if (!val('f-first_name') || !val('f-email')) { PX.showToast('Please complete required fields', 'warning'); return; }
+
+  // Core employee data
+  const empData = {
+    first_name: val('f-first_name'), last_name: val('f-last_name'),
+    email: val('f-email'), phone: val('f-phone'),
+    date_of_birth: val('f-date_of_birth'), gender: val('f-gender'),
+    blood_group: val('f-blood_group'), address: val('f-address'),
+    city: val('f-city'), state: val('f-state'), pincode: val('f-pincode'),
+    department: val('f-department'), designation: val('f-designation'),
+    date_of_joining: val('f-date_of_joining'), employment_type: val('f-employment_type'),
+    manager: val('f-manager'), work_location: val('f-location'),
+    daily_rate: parseFloat(val('f-daily_rate')) || 1000,
+  };
+
+  const empId = PX.addEmployee(empData);
+
+  // Education
+  for (let i = 1; i <= eduCount; i++) {
+    const deg = document.getElementById(`edu-degree-${i}`);
+    if (!deg) continue;
+    PX.addEducation({
+      employee_id: empId,
+      degree: deg.value,
+      institution: val(`edu-inst-${i}`),
+      board_university: val(`edu-board-${i}`),
+      year_of_passing: val(`edu-year-${i}`),
+      percentage_grade: val(`edu-grade-${i}`),
+    });
+  }
+
+  // Experience
+  if (document.getElementById('has-exp').value === 'yes') {
+    for (let i = 1; i <= expCount; i++) {
+      const co = document.getElementById(`exp-company-${i}`);
+      if (!co) continue;
+      PX.addExperience({
+        employee_id: empId,
+        company_name: co.value,
+        designation: val(`exp-desig-${i}`),
+        start_date: val(`exp-start-${i}`),
+        end_date: val(`exp-end-${i}`),
+        years_of_experience: val(`exp-years-${i}`),
+        responsibilities: val(`exp-resp-${i}`),
+        reason_for_leaving: val(`exp-reason-${i}`),
+        feedback: val(`exp-feedback-${i}`),
+      });
+    }
+  }
+
+  // Company history
+  PX.addHistory({
+    employee_id: empId,
+    event_type: 'Joined',
+    description: `Joined as ${empData.designation} in ${empData.department} department.`,
+    effective_date: empData.date_of_joining,
+    recorded_by: 'admin',
+  });
+
+  document.getElementById('generated-id').textContent = empId;
+  document.getElementById('success-overlay').classList.remove('hidden');
+}
+</script>
+</body>
+</html>

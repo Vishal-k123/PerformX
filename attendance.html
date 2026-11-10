@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Attendance</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item" onclick="location.href='dashboard.html'"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="location.href='employee-list.html'"><span class="nav-icon">👥</span> Employees</div>
+      <div class="nav-item" onclick="location.href='employee-form.html'"><span class="nav-icon">➕</span> Add Employee</div>
+      <div class="nav-item active"><span class="nav-icon">⏰</span> Attendance</div>
+      <div class="sidebar-section-label">Reports</div>
+      <div class="nav-item" onclick="location.href='salary.html'"><span class="nav-icon">💰</span> Salary</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div><div class="user-name">Administrator</div><div class="user-role">System Admin</div></div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2>Attendance Management</h2>
+        <p>Record IN / OUT punches for employees</p>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px">
+
+        <!-- PUNCH CLOCK -->
+        <div>
+          <div class="punch-clock">
+            <div class="clock-display" id="live-clock">00:00:00</div>
+            <div class="clock-date" id="live-date"></div>
+
+            <!-- Employee selector -->
+            <div style="margin-bottom:28px">
+              <select id="emp-select" style="width:100%;padding:12px 16px;border-radius:var(--radius-sm);border:none;font-size:15px;font-weight:600;background:rgba(255,255,255,0.12);color:white;appearance:none;text-align:center">
+                <option value="">— Select Employee —</option>
+              </select>
+            </div>
+
+            <div class="punch-buttons">
+              <button class="punch-btn punch-in" id="btn-in" onclick="doPunch('IN')">
+                ✅ Punch IN
+              </button>
+              <button class="punch-btn punch-out" id="btn-out" onclick="doPunch('OUT')">
+                🔴 Punch OUT
+              </button>
+            </div>
+
+            <div class="punch-history" id="today-punches" style="margin-top:24px;text-align:left">
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:12px">Today's Punches</div>
+              <div id="punch-list"><div style="color:rgba(255,255,255,0.3);font-size:13px">No punches yet</div></div>
+            </div>
+          </div>
+
+          <!-- Today summary -->
+          <div class="card mt-24" id="today-summary" style="display:none">
+            <div class="card-header"><div class="card-title">⏱ Today's Summary</div></div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item"><div class="info-label">First IN</div><div class="info-value" id="s-first-in">—</div></div>
+                <div class="info-item"><div class="info-label">Last OUT</div><div class="info-value" id="s-last-out">—</div></div>
+                <div class="info-item"><div class="info-label">Working Hours</div><div class="info-value fw-700" style="color:var(--success)" id="s-hours">—</div></div>
+                <div class="info-item"><div class="info-label">Status</div><div class="info-value" id="s-status">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TODAY'S ATTENDANCE TABLE -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 Today's Attendance</div>
+            <div class="card-subtitle" id="att-today-date"></div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr><th>Employee</th><th>First IN</th><th>Last OUT</th><th>Hours</th><th>Status</th></tr>
+              </thead>
+              <tbody id="att-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONTHLY REPORT -->
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">📊 Monthly Attendance Report</div></div>
+          <div class="flex gap-12">
+            <select id="month-emp" style="padding:8px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-size:13px">
+              <option value="">Select Employee</option>
+            </select>
+            <input type="month" id="month-picker" style="padding:8px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-size:13px"/>
+            <button class="btn btn-primary-filled btn-sm" onclick="loadMonthly()">View Report</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Day</th><th>First IN</th><th>Last OUT</th><th>Working Hours</th><th>Status</th></tr>
+            </thead>
+            <tbody id="monthly-table">
+              <tr><td colspan="6" class="text-center text-muted" style="padding:32px">Select employee and month to view report</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-body" id="monthly-summary" style="display:none">
+          <div class="info-grid-3" style="gap:16px">
+            <div class="stat-card" style="border:none;box-shadow:none;background:var(--gray-100)">
+              <div class="stat-value" id="m-days" style="font-size:24px">0</div>
+              <div class="stat-label">Working Days</div>
+            </div>
+            <div class="stat-card" style="border:none;box-shadow:none;background:var(--gray-100)">
+              <div class="stat-value" id="m-hours" style="font-size:24px">0</div>
+              <div class="stat-label">Total Hours</div>
+            </div>
+            <div class="stat-card" style="border:none;box-shadow:none;background:var(--gray-100)">
+              <div class="stat-value" id="m-avg" style="font-size:24px">0</div>
+              <div class="stat-label">Avg Hours/Day</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+PX.requireAdmin();
+
+const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Set default month to current
+const now = new Date();
+document.getElementById('month-picker').value = now.toISOString().substring(0,7);
+document.getElementById('att-today-date').textContent = now.toLocaleDateString('en-IN');
+document.getElementById('live-date').textContent = now.toLocaleDateString('en-IN', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+PX.startClock('live-clock');
+
+// Populate employee selects
+function populateSelects() {
+  const emps = PX.getAllEmployees();
+  const opts = emps.map(e => `<option value="${e.employee_id}">${e.employee_id} — ${e.first_name} ${e.last_name}</option>`).join('');
+  document.getElementById('emp-select').innerHTML = '<option value="">— Select Employee —</option>' + opts;
+  document.getElementById('month-emp').innerHTML = '<option value="">Select Employee</option>' + opts;
+
+  // Pre-select if ?emp= in URL
+  const params = new URLSearchParams(location.search);
+  const pre = params.get('emp');
+  if (pre) { document.getElementById('emp-select').value = pre; loadTodayPunches(); }
+}
+
+function doPunch(type) {
+  const empId = document.getElementById('emp-select').value;
+  if (!empId) { PX.showToast('Please select an employee first', 'warning'); return; }
+
+  if (type === 'IN') {
+    const t = PX.punchIn(empId);
+    PX.showToast(`✅ Punch IN recorded at ${t}`, 'success');
+  } else {
+    const att = PX.getTodayAttendance(empId);
+    if (!att || !att.first_in) { PX.showToast('Employee has not punched IN today', 'warning'); return; }
+    const t = PX.punchOut(empId);
+    PX.showToast(`🔴 Punch OUT recorded at ${t}`, 'success');
+  }
+
+  loadTodayPunches();
+  loadTodayTable();
+}
+
+function loadTodayPunches() {
+  const empId = document.getElementById('emp-select').value;
+  if (!empId) return;
+
+  const punches = PX.getTodayPunches(empId);
+  const punchList = document.getElementById('punch-list');
+
+  if (punches.length === 0) {
+    punchList.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px">No punches yet today</div>';
+  } else {
+    punchList.innerHTML = punches.map(p => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <span style="font-size:13px;color:${p.punch_type==='IN'?'#6ee7b7':'#fca5a5'}">${p.punch_type==='IN'?'✅':'🔴'} Punch ${p.punch_type}</span>
+        <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:white">${p.punch_time}</span>
+      </div>`).join('');
+  }
+
+  const att = PX.getTodayAttendance(empId);
+  if (att) {
+    document.getElementById('today-summary').style.display = 'block';
+    document.getElementById('s-first-in').textContent = att.first_in || '—';
+    document.getElementById('s-last-out').textContent = att.last_out || 'Still Working';
+    document.getElementById('s-hours').textContent = att.working_hours ? att.working_hours + ' hrs' : '—';
+    document.getElementById('s-status').innerHTML = `<span class="badge badge-success">${att.status}</span>`;
+  }
+}
+
+function loadTodayTable() {
+  const today = PX.getDateStr();
+  const allAtt = PX.Store.get(PX.KEYS.ATTENDANCE).filter(a => a.attendance_date === today);
+  const tbody = document.getElementById('att-table');
+
+  if (allAtt.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding:24px">No attendance recorded today</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allAtt.map(a => {
+    const emp = PX.getEmployee(a.employee_id);
+    const name = emp ? `${emp.first_name} ${emp.last_name}` : a.employee_id;
+    return `<tr>
+      <td>
+        <div class="fw-600">${name}</div>
+        <div class="text-sm text-muted">${a.employee_id}</div>
+      </td>
+      <td class="fw-600" style="color:var(--success)">${a.first_in||'—'}</td>
+      <td class="fw-600" style="color:var(--danger)">${a.last_out||'<span class="badge badge-warning">Still In</span>'}</td>
+      <td class="fw-600">${a.working_hours ? a.working_hours+' hrs' : '—'}</td>
+      <td><span class="badge badge-success">${a.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function loadMonthly() {
+  const empId = document.getElementById('month-emp').value;
+  const month = document.getElementById('month-picker').value;
+  if (!empId || !month) { PX.showToast('Select both employee and month', 'warning'); return; }
+
+  const records = PX.getMonthlyAttendance(empId, month);
+  const tbody = document.getElementById('monthly-table');
+
+  if (records.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:32px">No attendance records for this period</td></tr>';
+    document.getElementById('monthly-summary').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = records.map(r => {
+    const d = new Date(r.attendance_date);
+    return `<tr>
+      <td class="fw-600">${r.attendance_date}</td>
+      <td>${days[d.getDay()]}</td>
+      <td style="color:var(--success);font-weight:600">${r.first_in||'—'}</td>
+      <td style="color:var(--danger);font-weight:600">${r.last_out||'—'}</td>
+      <td class="fw-600">${r.working_hours ? r.working_hours+' hrs' : '—'}</td>
+      <td><span class="badge badge-success">${r.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  const totalHours = records.reduce((s,r) => s + parseFloat(r.working_hours||0), 0);
+  const avg = records.length ? (totalHours/records.length).toFixed(1) : 0;
+
+  document.getElementById('m-days').textContent  = records.length;
+  document.getElementById('m-hours').textContent = totalHours.toFixed(1);
+  document.getElementById('m-avg').textContent   = avg;
+  document.getElementById('monthly-summary').style.display = 'block';
+}
+
+document.getElementById('emp-select').addEventListener('change', loadTodayPunches);
+
+populateSelects();
+loadTodayTable();
+</script>
+</body>
+</html>

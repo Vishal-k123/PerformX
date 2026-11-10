@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — My Portal</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">My Portal</div>
+      <div class="nav-item active"><span class="nav-icon">🏠</span> My Dashboard</div>
+      <div class="nav-item" onclick="showSection('attendance-section')"><span class="nav-icon">⏰</span> My Attendance</div>
+      <div class="nav-item" onclick="showSection('salary-section')"><span class="nav-icon">💰</span> Salary Calculator</div>
+      <div class="nav-item" onclick="showSection('profile-section')"><span class="nav-icon">👤</span> My Profile</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar">E</div>
+        <div>
+          <div class="user-name" id="sidebar-name">Employee</div>
+          <div class="user-role" id="sidebar-id">—</div>
+        </div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2 id="topbar-greeting">Good Day!</h2>
+        <p id="topbar-date"></p>
+      </div>
+      <div class="topbar-actions">
+        <div id="topbar-id" style="font-family:var(--mono);font-size:13px;font-weight:600;background:rgba(59,130,246,0.1);color:var(--accent);padding:8px 14px;border-radius:var(--radius-sm)"></div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- ── DASHBOARD ── -->
+      <div id="dashboard-section">
+        <!-- Profile Hero -->
+        <div class="profile-hero mb-24">
+          <div class="profile-avatar" id="hero-avatar">E</div>
+          <div>
+            <div class="profile-name" id="hero-name">—</div>
+            <div class="profile-designation" id="hero-desig">—</div>
+            <div class="profile-id" id="hero-id">—</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:12px;color:rgba(255,255,255,0.4)">Member Since</div>
+            <div style="font-weight:700;color:white" id="hero-joined">—</div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid mb-24">
+          <div class="stat-card">
+            <div class="stat-header"><div class="stat-icon green">✅</div></div>
+            <div class="stat-value" id="q-present">0</div>
+            <div class="stat-label">Days Present (This Month)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><div class="stat-icon blue">⏱</div></div>
+            <div class="stat-value" id="q-hours">0</div>
+            <div class="stat-label">Total Hours (This Month)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><div class="stat-icon amber">💰</div></div>
+            <div class="stat-value" id="q-daily">₹0</div>
+            <div class="stat-label">Daily Rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><div class="stat-icon purple">📅</div></div>
+            <div class="stat-value" id="q-month-sal">₹0</div>
+            <div class="stat-label">Estimated This Month</div>
+          </div>
+        </div>
+
+        <!-- Today Punch Card -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div class="punch-clock">
+            <div class="clock-display" id="emp-clock">00:00:00</div>
+            <div class="clock-date" id="emp-date"></div>
+            <div class="punch-buttons">
+              <button class="punch-btn punch-in" onclick="empPunch('IN')">✅ Punch IN</button>
+              <button class="punch-btn punch-out" onclick="empPunch('OUT')">🔴 Punch OUT</button>
+            </div>
+            <div class="punch-history" style="margin-top:20px;text-align:left">
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:10px">Today</div>
+              <div id="emp-punch-list"><div style="color:rgba(255,255,255,0.3);font-size:13px">No punches yet</div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">📊 This Month Attendance</div></div>
+              <div style="overflow-x:auto;max-height:360px;overflow-y:auto">
+                <table>
+                  <thead><tr><th>Date</th><th>IN</th><th>OUT</th><th>Hours</th></tr></thead>
+                  <tbody id="emp-att-table"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ATTENDANCE SECTION ── -->
+      <div id="attendance-section" class="hidden">
+        <div class="section-heading">My Attendance</div>
+        <div class="section-sub">View your full attendance history</div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Filter by Month</div>
+            <div class="flex gap-12">
+              <input type="month" id="emp-month-pick" style="padding:8px 12px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-size:13px"/>
+              <button class="btn btn-primary-filled btn-sm" onclick="loadEmpMonthly()">View</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Date</th><th>Day</th><th>First IN</th><th>Last OUT</th><th>Working Hours</th><th>Status</th></tr></thead>
+              <tbody id="emp-monthly-table">
+                <tr><td colspan="6" class="text-center text-muted" style="padding:32px">Select a month to view</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card-body" id="emp-monthly-summary" style="display:none">
+            <div class="info-grid-3">
+              <div style="text-align:center;padding:16px;background:var(--gray-100);border-radius:var(--radius-sm)">
+                <div style="font-size:28px;font-weight:800;color:var(--navy)" id="em-days">0</div>
+                <div class="text-sm text-muted">Days Present</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:var(--gray-100);border-radius:var(--radius-sm)">
+                <div style="font-size:28px;font-weight:800;color:var(--navy)" id="em-hours">0</div>
+                <div class="text-sm text-muted">Total Hours</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:var(--gray-100);border-radius:var(--radius-sm)">
+                <div style="font-size:28px;font-weight:800;color:var(--success)" id="em-est">₹0</div>
+                <div class="text-sm text-muted">Estimated Salary</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SALARY SECTION ── -->
+      <div id="salary-section" class="hidden">
+        <div class="section-heading">Salary Calculator</div>
+        <div class="section-sub">Calculate your salary by entering working days or hours</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Enter Details</div></div>
+            <div class="card-body">
+              <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px">
+                <div class="flex-between">
+                  <span class="text-muted">Your Daily Rate</span>
+                  <span class="fw-700" style="color:var(--success)" id="my-daily-rate">₹0</span>
+                </div>
+                <div class="flex-between mt-16">
+                  <span class="text-muted">Hourly Rate</span>
+                  <span class="fw-700" style="color:var(--accent)" id="my-hourly-rate">₹0/hr</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;margin-bottom:20px">
+                <button class="btn w-full" id="emp-mode-days" onclick="empSetMode('days')"
+                  style="background:var(--navy);color:white">By Days</button>
+                <button class="btn w-full btn-outline" id="emp-mode-hours" onclick="empSetMode('hours')">By Hours</button>
+              </div>
+
+              <div id="emp-days-in">
+                <div class="field-group mb-20">
+                  <label>Working Days</label>
+                  <input type="number" id="emp-sal-days" placeholder="e.g. 26" min="0" max="31" oninput="empCalcSal()"/>
+                  <small style="color:var(--gray-400);font-size:11px;margin-top:4px;display:block">Per day = ₹<span id="hint-rate">0</span> (8 hours)</small>
+                </div>
+              </div>
+
+              <div id="emp-hours-in" class="hidden">
+                <div class="field-group mb-20">
+                  <label>Total Working Hours</label>
+                  <input type="number" id="emp-sal-hours" placeholder="e.g. 208" min="0" oninput="empCalcSal()"/>
+                </div>
+              </div>
+
+              <div class="field-group mb-20">
+                <label>Deductions (₹) — optional</label>
+                <input type="number" id="emp-deductions" placeholder="0" oninput="empCalcSal()"/>
+              </div>
+
+              <button class="btn btn-primary-filled w-full btn-lg" onclick="empCalcSal()">Calculate</button>
+            </div>
+          </div>
+
+          <!-- Result -->
+          <div class="salary-calc">
+            <div class="salary-result">
+              <div style="font-size:12px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px">Your Salary</div>
+              <div class="salary-amount"><span>₹</span><span id="emp-gross-amt">0</span></div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.4)" id="emp-sal-formula">Enter details above</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:0">
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Working Days</span><span class="fw-700" id="eb-days">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Working Hours</span><span class="fw-700" id="eb-hours">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Daily Rate</span><span class="fw-700" id="eb-rate">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Gross Salary</span><span class="fw-700" style="color:var(--success)" id="eb-gross">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Deductions</span><span class="fw-700" style="color:var(--danger)" id="eb-ded">₹0</span>
+                </div>
+                <div class="flex-between" style="padding:16px 0">
+                  <span class="fw-700" style="font-size:16px">Net Salary</span>
+                  <span class="fw-700" style="font-size:22px;color:var(--navy)" id="eb-net">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PROFILE SECTION ── -->
+      <div id="profile-section" class="hidden">
+        <div class="section-heading">My Profile</div>
+        <div class="section-sub">Your personal and professional details</div>
+
+        <div id="profile-content"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+const user = PX.requireEmployee();
+const empId = user.employee_id;
+const emp   = PX.getEmployee(empId);
+
+if (!emp) { PX.logout(); }
+
+const days7 = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const initials = emp.first_name[0] + emp.last_name[0];
+const now = new Date();
+const thisMonth = now.toISOString().substring(0,7);
+
+// Setup sidebar & topbar
+document.getElementById('sidebar-avatar').textContent = initials;
+document.getElementById('sidebar-name').textContent   = emp.first_name + ' ' + emp.last_name;
+document.getElementById('sidebar-id').textContent     = emp.employee_id;
+document.getElementById('topbar-greeting').textContent = `Good Day, ${emp.first_name}! 👋`;
+document.getElementById('topbar-date').textContent    = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('topbar-id').textContent      = emp.employee_id;
+document.getElementById('emp-date').textContent       = now.toLocaleDateString('en-IN');
+document.getElementById('emp-month-pick').value       = thisMonth;
+
+// Hero
+document.getElementById('hero-avatar').textContent = initials;
+document.getElementById('hero-name').textContent   = emp.first_name + ' ' + emp.last_name;
+document.getElementById('hero-desig').textContent  = (emp.designation||'—') + ' · ' + (emp.department||'—');
+document.getElementById('hero-id').textContent     = emp.employee_id;
+document.getElementById('hero-joined').textContent = emp.date_of_joining || '—';
+
+PX.startClock('emp-clock');
+
+// Stats
+const monthAtt   = PX.getMonthlyAttendance(empId, thisMonth);
+const totalHours = monthAtt.reduce((s,a) => s+parseFloat(a.working_hours||0),0);
+const estSal     = (monthAtt.length * (emp.daily_rate||0)).toLocaleString('en-IN');
+document.getElementById('q-present').textContent  = monthAtt.length;
+document.getElementById('q-hours').textContent    = totalHours.toFixed(1);
+document.getElementById('q-daily').textContent    = '₹'+(emp.daily_rate||0).toLocaleString('en-IN');
+document.getElementById('q-month-sal').textContent= '₹'+estSal;
+
+// This month table
+const attTbody = document.getElementById('emp-att-table');
+if (monthAtt.length === 0) {
+  attTbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px">No attendance this month</td></tr>';
+} else {
+  attTbody.innerHTML = [...monthAtt].reverse().slice(0,10).map(a => `<tr>
+    <td class="fw-600">${a.attendance_date}</td>
+    <td style="color:var(--success)">${a.first_in||'—'}</td>
+    <td style="color:var(--danger)">${a.last_out||'—'}</td>
+    <td class="fw-600">${a.working_hours||'—'} hrs</td>
+  </tr>`).join('');
+}
+
+// Today punches
+function loadTodayPunches() {
+  const punches = PX.getTodayPunches(empId);
+  const el = document.getElementById('emp-punch-list');
+  el.innerHTML = punches.length ? punches.map(p => `
+    <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.07)">
+      <span style="color:${p.punch_type==='IN'?'#6ee7b7':'#fca5a5'};font-size:13px">${p.punch_type==='IN'?'✅':'🔴'} ${p.punch_type}</span>
+      <span style="font-family:var(--mono);font-weight:600;color:white;font-size:14px">${p.punch_time}</span>
+    </div>`).join('') : '<div style="color:rgba(255,255,255,0.3);font-size:13px">No punches yet</div>';
+}
+
+function empPunch(type) {
+  if (type === 'IN') {
+    const t = PX.punchIn(empId);
+    PX.showToast(`✅ Punch IN at ${t}`, 'success');
+  } else {
+    const att = PX.getTodayAttendance(empId);
+    if (!att?.first_in) { PX.showToast('Please punch IN first', 'warning'); return; }
+    const t = PX.punchOut(empId);
+    PX.showToast(`🔴 Punch OUT at ${t}`, 'success');
+  }
+  loadTodayPunches();
+}
+
+loadTodayPunches();
+
+// Salary rates
+const myDaily  = emp.daily_rate || 0;
+const myHourly = myDaily / 8;
+document.getElementById('my-daily-rate').textContent  = `₹${myDaily.toLocaleString('en-IN')}`;
+document.getElementById('my-hourly-rate').textContent = `₹${myHourly.toFixed(2)}/hr`;
+document.getElementById('hint-rate').textContent = myDaily;
+document.getElementById('eb-rate').textContent   = `₹${myDaily.toLocaleString('en-IN')}/day`;
+
+let empCalcMode = 'days';
+
+function empSetMode(mode) {
+  empCalcMode = mode;
+  document.getElementById('emp-days-in').classList.toggle('hidden', mode!=='days');
+  document.getElementById('emp-hours-in').classList.toggle('hidden', mode!=='hours');
+  document.getElementById('emp-mode-days').style.background  = mode==='days'  ? 'var(--navy)' : 'transparent';
+  document.getElementById('emp-mode-days').style.color       = mode==='days'  ? 'white' : '';
+  document.getElementById('emp-mode-hours').style.background = mode==='hours' ? 'var(--navy)' : 'transparent';
+  document.getElementById('emp-mode-hours').style.color      = mode==='hours' ? 'white' : '';
+  empCalcSal();
+}
+
+function empCalcSal() {
+  const deduct = parseFloat(document.getElementById('emp-deductions').value)||0;
+  let gross=0, daysVal=0, hoursVal=0;
+
+  if (empCalcMode==='days') {
+    daysVal  = parseFloat(document.getElementById('emp-sal-days').value)||0;
+    hoursVal = daysVal*8;
+    gross    = daysVal*myDaily;
+    document.getElementById('emp-sal-formula').textContent = `₹${myDaily} × ${daysVal} days`;
+  } else {
+    hoursVal = parseFloat(document.getElementById('emp-sal-hours').value)||0;
+    daysVal  = (hoursVal/8).toFixed(1);
+    gross    = myHourly*hoursVal;
+    document.getElementById('emp-sal-formula').textContent = `₹${myHourly.toFixed(2)}/hr × ${hoursVal} hrs`;
+  }
+  const net = Math.max(0, gross-deduct);
+  document.getElementById('emp-gross-amt').textContent = gross.toLocaleString('en-IN');
+  document.getElementById('eb-days').textContent       = daysVal+' days';
+  document.getElementById('eb-hours').textContent      = hoursVal+' hrs';
+  document.getElementById('eb-gross').textContent      = `₹${gross.toLocaleString('en-IN')}`;
+  document.getElementById('eb-ded').textContent        = `₹${deduct.toLocaleString('en-IN')}`;
+  document.getElementById('eb-net').textContent        = `₹${net.toLocaleString('en-IN')}`;
+}
+
+// Monthly attendance
+function loadEmpMonthly() {
+  const month = document.getElementById('emp-month-pick').value;
+  const records = PX.getMonthlyAttendance(empId, month);
+  const tbody   = document.getElementById('emp-monthly-table');
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:32px">No records for this month</td></tr>';
+    document.getElementById('emp-monthly-summary').style.display='none'; return;
+  }
+  tbody.innerHTML = records.map(r => {
+    const d = new Date(r.attendance_date);
+    return `<tr>
+      <td class="fw-600">${r.attendance_date}</td>
+      <td>${days7[d.getDay()]}</td>
+      <td style="color:var(--success);font-weight:600">${r.first_in||'—'}</td>
+      <td style="color:var(--danger);font-weight:600">${r.last_out||'—'}</td>
+      <td class="fw-600">${r.working_hours||'—'} hrs</td>
+      <td><span class="badge badge-success">${r.status}</span></td>
+    </tr>`;
+  }).join('');
+  const th = records.reduce((s,r)=>s+parseFloat(r.working_hours||0),0);
+  const estM = (records.length*myDaily).toLocaleString('en-IN');
+  document.getElementById('em-days').textContent  = records.length;
+  document.getElementById('em-hours').textContent = th.toFixed(1);
+  document.getElementById('em-est').textContent   = '₹'+estM;
+  document.getElementById('emp-monthly-summary').style.display='block';
+}
+
+// Profile
+function buildProfile() {
+  const edu = PX.getEducation(empId);
+  const exp = PX.getExperience(empId);
+  document.getElementById('profile-content').innerHTML = `
+    <div style="background:linear-gradient(135deg,var(--navy),var(--navy-light));border-radius:var(--radius);padding:28px;display:flex;gap:20px;align-items:center;color:white;margin-bottom:20px">
+      <div class="user-avatar" style="width:72px;height:72px;font-size:28px;border:3px solid rgba(255,255,255,0.2)">${initials}</div>
+      <div>
+        <div style="font-size:22px;font-weight:800">${emp.first_name} ${emp.last_name}</div>
+        <div style="color:rgba(255,255,255,0.5)">${emp.designation||'—'} · ${emp.department||'—'}</div>
+        <div style="font-family:var(--mono);font-size:12px;background:rgba(59,130,246,0.25);color:var(--accent);padding:3px 10px;border-radius:6px;display:inline-block;margin-top:8px">${emp.employee_id}</div>
+      </div>
+    </div>
+    <div class="card mb-20">
+      <div class="card-header"><div class="card-title">Personal Information</div></div>
+      <div class="card-body">
+        <div class="info-grid" style="gap:16px">
+          <div class="info-item"><div class="info-label">Email</div><div class="info-value">${emp.email||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${emp.phone||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Date of Birth</div><div class="info-value">${emp.date_of_birth||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Blood Group</div><div class="info-value">${emp.blood_group||'—'}</div></div>
+          <div class="info-item"><div class="info-label">City / State</div><div class="info-value">${[emp.city,emp.state].filter(Boolean).join(', ')||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Joined</div><div class="info-value">${emp.date_of_joining||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Employment Type</div><div class="info-value">${emp.employment_type||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Daily Rate</div><div class="info-value fw-700" style="color:var(--success)">₹${Number(emp.daily_rate||0).toLocaleString('en-IN')}</div></div>
+        </div>
+      </div>
+    </div>
+    ${edu.length ? `<div class="card mb-20">
+      <div class="card-header"><div class="card-title">🎓 Education</div></div>
+      <div class="card-body">
+        ${edu.map(e=>`<div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+          <div class="fw-700">${e.degree}</div>
+          <div class="text-sm text-muted">${e.institution} · ${e.year_of_passing} · ${e.percentage_grade}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+    ${exp.length ? `<div class="card">
+      <div class="card-header"><div class="card-title">🏢 Work Experience</div></div>
+      <div class="card-body">
+        ${exp.map(e=>`<div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+          <div class="fw-700">${e.company_name}</div>
+          <div class="text-sm text-muted">${e.designation} · ${e.years_of_experience} yrs</div>
+          <div class="text-sm text-muted">${e.start_date} → ${e.end_date}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+// Navigation
+const sections = ['dashboard-section','attendance-section','salary-section','profile-section'];
+function showSection(id) {
+  sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if (id==='profile-section') buildProfile();
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

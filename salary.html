@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Salary</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item" onclick="location.href='dashboard.html'"><span class="nav-icon">📊</span> Dashboard</div>
+      <div class="nav-item" onclick="location.href='employee-list.html'"><span class="nav-icon">👥</span> Employees</div>
+      <div class="nav-item" onclick="location.href='employee-form.html'"><span class="nav-icon">➕</span> Add Employee</div>
+      <div class="nav-item" onclick="location.href='attendance.html'"><span class="nav-icon">⏰</span> Attendance</div>
+      <div class="sidebar-section-label">Reports</div>
+      <div class="nav-item active"><span class="nav-icon">💰</span> Salary</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div><div class="user-name">Administrator</div><div class="user-role">System Admin</div></div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">🚪 Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2>Salary Calculator</h2>
+        <p>Calculate employee salary based on working days or hours</p>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+        <!-- CALCULATOR -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">💰 Calculate Salary</div></div>
+          <div class="card-body">
+            <div class="field-group mb-20">
+              <label>Select Employee</label>
+              <select id="sal-emp" onchange="onEmpChange()">
+                <option value="">— Choose Employee —</option>
+              </select>
+            </div>
+
+            <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px" id="emp-rate-info" style="display:none">
+              <div class="flex-between">
+                <span class="text-sm text-muted">Daily Rate (8 hrs)</span>
+                <span class="fw-700" style="color:var(--success)" id="show-daily">₹0</span>
+              </div>
+              <div class="flex-between mt-16">
+                <span class="text-sm text-muted">Hourly Rate</span>
+                <span class="fw-700" style="color:var(--accent)" id="show-hourly">₹0/hr</span>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex;gap:12px;margin-bottom:20px">
+              <button class="btn w-full" id="mode-days" onclick="setMode('days')"
+                style="background:var(--navy);color:white">By Days</button>
+              <button class="btn w-full btn-outline" id="mode-hours" onclick="setMode('hours')">By Hours</button>
+            </div>
+
+            <div id="days-inputs">
+              <div class="field-group mb-20">
+                <label>Number of Working Days</label>
+                <input type="number" id="sal-days" placeholder="26" min="0" max="31" oninput="calcSal()"/>
+              </div>
+            </div>
+
+            <div id="hours-inputs" class="hidden">
+              <div class="form-grid">
+                <div class="field-group mb-20">
+                  <label>Total Working Hours</label>
+                  <input type="number" id="sal-hours" placeholder="208" min="0" oninput="calcSal()"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="field-group mb-20">
+              <label>Deductions (₹) — optional</label>
+              <input type="number" id="sal-deductions" placeholder="0" min="0" oninput="calcSal()"/>
+            </div>
+
+            <button class="btn btn-primary-filled w-full btn-lg" onclick="calcSal()">Calculate Now</button>
+          </div>
+        </div>
+
+        <!-- RESULT -->
+        <div>
+          <div class="salary-calc">
+            <div class="salary-result">
+              <div style="font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase">Gross Salary</div>
+              <div class="salary-amount"><span>₹</span><span id="gross-amt">0</span></div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.4)" id="sal-formula">Enter details to calculate</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:12px" id="sal-breakdown">
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Working Days</span>
+                  <span class="fw-700" id="b-days">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Working Hours</span>
+                  <span class="fw-700" id="b-hours">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Daily Rate</span>
+                  <span class="fw-700" id="b-rate">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Gross Salary</span>
+                  <span class="fw-700" style="color:var(--success)" id="b-gross">—</span>
+                </div>
+                <div class="flex-between" style="padding:12px 0;border-bottom:1px solid var(--gray-200)">
+                  <span class="text-muted">Deductions</span>
+                  <span class="fw-700" style="color:var(--danger)" id="b-ded">₹0</span>
+                </div>
+                <div class="flex-between" style="padding:14px 0">
+                  <span class="fw-700" style="font-size:16px">Net Salary</span>
+                  <span class="fw-700" style="font-size:20px;color:var(--navy)" id="b-net">—</span>
+                </div>
+              </div>
+              <button class="btn btn-success w-full mt-16" onclick="saveSalary()">💾 Save Salary Record</button>
+            </div>
+          </div>
+
+          <!-- Info Card -->
+          <div class="card mt-24">
+            <div class="card-header"><div class="card-title">ℹ️ How Salary is Calculated</div></div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:12px;font-size:14px">
+                <div style="padding:12px;background:var(--gray-100);border-radius:var(--radius-sm)">
+                  <div class="fw-700 mb-16">📅 By Days</div>
+                  <div class="text-muted">Net = Daily Rate × Working Days − Deductions</div>
+                  <div class="text-sm text-muted" style="margin-top:4px">Example: ₹1000 × 26 days = ₹26,000</div>
+                </div>
+                <div style="padding:12px;background:var(--gray-100);border-radius:var(--radius-sm)">
+                  <div class="fw-700 mb-16">⏰ By Hours</div>
+                  <div class="text-muted">Hourly Rate = Daily Rate ÷ 8</div>
+                  <div class="text-muted">Net = Hourly Rate × Total Hours − Deductions</div>
+                  <div class="text-sm text-muted" style="margin-top:4px">Example: ₹125/hr × 208 hrs = ₹26,000</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SALARY HISTORY -->
+      <div class="card mt-24">
+        <div class="card-header"><div class="card-title">📋 Salary History</div></div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>Employee</th><th>Month</th><th>Days</th><th>Hours</th><th>Daily Rate</th><th>Gross</th><th>Deductions</th><th>Net Salary</th></tr>
+            </thead>
+            <tbody id="sal-history">
+              <tr><td colspan="8" class="text-center text-muted" style="padding:32px">No salary records saved yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+PX.requireAdmin();
+
+let calcMode = 'days';
+let currentDailyRate = 0;
+
+function populateEmps() {
+  const emps = PX.getAllEmployees();
+  document.getElementById('sal-emp').innerHTML =
+    '<option value="">— Choose Employee —</option>' +
+    emps.map(e => `<option value="${e.employee_id}" data-rate="${e.daily_rate}">${e.employee_id} — ${e.first_name} ${e.last_name} (₹${e.daily_rate}/day)</option>`).join('');
+}
+
+function onEmpChange() {
+  const sel = document.getElementById('sal-emp');
+  const opt = sel.options[sel.selectedIndex];
+  currentDailyRate = parseFloat(opt.dataset.rate) || 0;
+  document.getElementById('show-daily').textContent  = `₹${currentDailyRate.toLocaleString('en-IN')}`;
+  document.getElementById('show-hourly').textContent = `₹${(currentDailyRate/8).toFixed(2)}/hr`;
+  document.getElementById('emp-rate-info').style.display = currentDailyRate ? 'block' : 'none';
+  calcSal();
+}
+
+function setMode(mode) {
+  calcMode = mode;
+  document.getElementById('days-inputs').classList.toggle('hidden', mode !== 'days');
+  document.getElementById('hours-inputs').classList.toggle('hidden', mode !== 'hours');
+  document.getElementById('mode-days').style.background  = mode === 'days'  ? 'var(--navy)' : 'transparent';
+  document.getElementById('mode-days').style.color       = mode === 'days'  ? 'white' : '';
+  document.getElementById('mode-hours').style.background = mode === 'hours' ? 'var(--navy)' : 'transparent';
+  document.getElementById('mode-hours').style.color      = mode === 'hours' ? 'white' : '';
+  calcSal();
+}
+
+function calcSal() {
+  const rate   = currentDailyRate;
+  const deduct = parseFloat(document.getElementById('sal-deductions').value) || 0;
+  let gross = 0, days = 0, hours = 0;
+
+  if (calcMode === 'days') {
+    days  = parseFloat(document.getElementById('sal-days').value) || 0;
+    hours = days * 8;
+    gross = days * rate;
+    document.getElementById('sal-formula').textContent = `₹${rate} × ${days} days`;
+  } else {
+    hours = parseFloat(document.getElementById('sal-hours').value) || 0;
+    days  = (hours / 8).toFixed(1);
+    gross = (rate / 8) * hours;
+    document.getElementById('sal-formula').textContent = `₹${(rate/8).toFixed(2)}/hr × ${hours} hrs`;
+  }
+
+  const net = Math.max(0, gross - deduct);
+
+  document.getElementById('gross-amt').textContent = gross.toLocaleString('en-IN');
+  document.getElementById('b-days').textContent    = days + ' days';
+  document.getElementById('b-hours').textContent   = hours + ' hrs';
+  document.getElementById('b-rate').textContent    = `₹${rate.toLocaleString('en-IN')}/day`;
+  document.getElementById('b-gross').textContent   = `₹${gross.toLocaleString('en-IN')}`;
+  document.getElementById('b-ded').textContent     = `₹${deduct.toLocaleString('en-IN')}`;
+  document.getElementById('b-net').textContent     = `₹${net.toLocaleString('en-IN')}`;
+}
+
+function saveSalary() {
+  const empId = document.getElementById('sal-emp').value;
+  if (!empId) { PX.showToast('Please select an employee', 'warning'); return; }
+  const gross  = parseFloat(document.getElementById('gross-amt').textContent.replace(/,/g,'')) || 0;
+  const deduct = parseFloat(document.getElementById('sal-deductions').value) || 0;
+  const net    = Math.max(0, gross - deduct);
+  if (!gross) { PX.showToast('Please calculate salary first', 'warning'); return; }
+
+  const now = new Date();
+  const record = {
+    employee_id: empId,
+    month_year:  now.toISOString().substring(0,7),
+    working_days: parseFloat(document.getElementById('b-days').textContent) || 0,
+    working_hours: parseFloat(document.getElementById('b-hours').textContent) || 0,
+    daily_rate:  currentDailyRate,
+    gross_salary: gross, deductions: deduct, net_salary: net,
+    generated_at: now.toISOString(),
+  };
+  PX.Store.push(PX.KEYS.SALARY, record);
+  PX.showToast('Salary record saved!', 'success');
+  loadHistory();
+}
+
+function loadHistory() {
+  const records = PX.Store.get(PX.KEYS.SALARY).reverse();
+  const tbody   = document.getElementById('sal-history');
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:32px">No salary records saved yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = records.map(r => {
+    const emp = PX.getEmployee(r.employee_id);
+    return `<tr>
+      <td>
+        <div class="fw-600">${emp ? emp.first_name+' '+emp.last_name : r.employee_id}</div>
+        <div class="text-sm text-muted">${r.employee_id}</div>
+      </td>
+      <td>${r.month_year}</td>
+      <td>${r.working_days}</td>
+      <td>${r.working_hours}</td>
+      <td>₹${Number(r.daily_rate).toLocaleString('en-IN')}</td>
+      <td>₹${Number(r.gross_salary).toLocaleString('en-IN')}</td>
+      <td style="color:var(--danger)">₹${Number(r.deductions).toLocaleString('en-IN')}</td>
+      <td class="fw-700" style="color:var(--success)">₹${Number(r.net_salary).toLocaleString('en-IN')}</td>
+    </tr>`;
+  }).join('');
+}
+
+populateEmps();
+loadHistory();
+</script>
+</body>
+</html>

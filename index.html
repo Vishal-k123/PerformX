@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .role-select-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 28px;
+    }
+    .role-card {
+      border: 2px solid var(--gray-200); border-radius: var(--radius);
+      padding: 18px 14px; text-align: center; cursor: pointer;
+      transition: var(--transition); background: var(--off-white);
+    }
+    .role-card:hover { border-color: var(--accent); background: #eff6ff; }
+    .role-card.selected { border-color: var(--accent); background: #eff6ff; }
+    .role-card .role-icon { font-size: 28px; margin-bottom: 8px; }
+    .role-card .role-name { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+    .role-card .role-desc { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
+    .field-hint { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="login-page">
+
+  <!-- LEFT PANEL -->
+  <div class="login-left">
+    <div class="login-circles">
+      <div class="circle circle-1"></div>
+      <div class="circle circle-2"></div>
+      <div class="circle circle-3"></div>
+    </div>
+    <div class="login-brand">
+      <div class="logo-icon">⚡</div>
+      <h1>Perform<span>X</span></h1>
+      <p>Complete employee performance management — from onboarding to daily attendance, salary, and growth tracking.</p>
+      <div class="login-features">
+        <div class="login-feature"><div class="dot"></div> Smart Employee ID Generation</div>
+        <div class="login-feature"><div class="dot"></div> Real-time IN/OUT Attendance Tracking</div>
+        <div class="login-feature"><div class="dot"></div> Salary Calculator with Daily Rate</div>
+        <div class="login-feature"><div class="dot"></div> Education & Experience History</div>
+        <div class="login-feature"><div class="dot"></div> Employee Self-Service Portal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="login-right">
+    <div class="login-box">
+      <h2>Welcome Back 👋</h2>
+      <p class="sub">Sign in to access your workspace</p>
+
+      <!-- Role Selection -->
+      <div class="role-select-grid">
+        <div class="role-card selected" onclick="selectRole('admin')" id="role-admin">
+          <div class="role-icon">🛡️</div>
+          <div class="role-name">Admin</div>
+          <div class="role-desc">Full system access</div>
+        </div>
+        <div class="role-card" onclick="selectRole('employee')" id="role-employee">
+          <div class="role-icon">👤</div>
+          <div class="role-name">Employee</div>
+          <div class="role-desc">Personal portal</div>
+        </div>
+      </div>
+
+      <!-- ADMIN LOGIN FORM -->
+      <div id="admin-form">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="admin-user" placeholder="Enter username" value="admin"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="admin-pass" placeholder="Enter password" value="admin123"/>
+        </div>
+        <button class="btn-primary" onclick="doAdminLogin()">Sign In as Admin</button>
+        <div class="login-hint mt-16">
+          Default credentials — <strong>Username:</strong> admin &nbsp;|&nbsp; <strong>Password:</strong> admin123
+        </div>
+      </div>
+
+      <!-- EMPLOYEE LOGIN FORM -->
+      <div id="employee-form" class="hidden">
+        <div class="form-group">
+          <label>Employee ID</label>
+          <input type="text" id="emp-id" placeholder="e.g. PX-2024-001"/>
+          <div class="field-hint">Your Employee ID given by HR at joining</div>
+        </div>
+        <div class="form-group">
+          <label>Birth Year</label>
+          <input type="number" id="emp-year" placeholder="e.g. 2000" min="1950" max="2010"/>
+          <div class="field-hint">Your year of birth is your password</div>
+        </div>
+        <button class="btn-primary" onclick="doEmployeeLogin()">Sign In as Employee</button>
+        <div class="login-hint mt-16">
+          Demo — <strong>Employee ID:</strong> PX-2024-001 &nbsp;|&nbsp; <strong>Birth Year:</strong> 2000
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  let currentRole = 'admin';
+
+  function selectRole(role) {
+    currentRole = role;
+    document.getElementById('role-admin').classList.toggle('selected', role === 'admin');
+    document.getElementById('role-employee').classList.toggle('selected', role === 'employee');
+    document.getElementById('admin-form').classList.toggle('hidden', role !== 'admin');
+    document.getElementById('employee-form').classList.toggle('hidden', role !== 'employee');
+  }
+
+  function doAdminLogin() {
+    const u = document.getElementById('admin-user').value.trim();
+    const p = document.getElementById('admin-pass').value.trim();
+    if (!u || !p) { PX.showToast('Please enter username and password', 'warning'); return; }
+    if (PX.loginAdmin(u, p)) {
+      PX.showToast('Welcome, Admin! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'pages/dashboard.html', 800);
+    } else {
+      PX.showToast('Invalid credentials. Try admin / admin123', 'error');
+    }
+  }
+
+  function doEmployeeLogin() {
+    const id   = document.getElementById('emp-id').value.trim().toUpperCase();
+    const year = document.getElementById('emp-year').value.trim();
+    if (!id || !year) { PX.showToast('Please fill all fields', 'warning'); return; }
+    const emp = PX.loginEmployee(id, year);
+    if (emp) {
+      PX.showToast(`Welcome, ${emp.first_name}! Redirecting...`, 'success');
+      setTimeout(() => window.location.href = 'pages/employee-portal.html', 800);
+    } else {
+      PX.showToast('Invalid Employee ID or Birth Year', 'error');
+    }
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (currentRole === 'admin') doAdminLogin();
+      else doEmployeeLogin();
+    }
+  });
+</script>
+</body>
+</html>

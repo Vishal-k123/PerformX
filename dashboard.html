@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PerformX — Admin Dashboard</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-box">⚡</div>
+        <span>Perform<em>X</em></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item active" onclick="location.href='dashboard.html'">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="location.href='employee-list.html'">
+        <span class="nav-icon">👥</span> Employees
+      </div>
+      <div class="nav-item" onclick="location.href='employee-form.html'">
+        <span class="nav-icon">➕</span> Add Employee
+      </div>
+      <div class="nav-item" onclick="location.href='attendance.html'">
+        <span class="nav-icon">⏰</span> Attendance
+      </div>
+      <div class="sidebar-section-label">Reports</div>
+      <div class="nav-item" onclick="location.href='salary.html'">
+        <span class="nav-icon">💰</span> Salary
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">A</div>
+        <div>
+          <div class="user-name">Administrator</div>
+          <div class="user-role">System Admin</div>
+        </div>
+      </div>
+      <button class="btn btn-danger-outline w-full mt-16" style="justify-content:center" onclick="PX.logout()">
+        🚪 Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-title">
+        <h2>Dashboard</h2>
+        <p id="today-date"></p>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary-filled" onclick="location.href='employee-form.html'">
+          ➕ Add Employee
+        </button>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- STATS -->
+      <div class="stats-grid" id="stats-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- RECENT EMPLOYEES -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Recent Employees</div>
+              <div class="card-subtitle">Last 5 added</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="location.href='employee-list.html'">View All</button>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Name</th><th>Department</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="recent-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TODAY'S ATTENDANCE -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Today's Attendance</div>
+              <div class="card-subtitle" id="att-date"></div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="location.href='attendance.html'">Manage</button>
+          </div>
+          <div class="card-body" id="today-attendance">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- DEPARTMENT SUMMARY -->
+      <div class="card mt-24">
+        <div class="card-header">
+          <div class="card-title">Department Overview</div>
+        </div>
+        <div class="card-body">
+          <div id="dept-summary" style="display:flex;gap:16px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="../js/app.js"></script>
+<script>
+PX.requireAdmin();
+
+const today = new Date();
+document.getElementById('today-date').textContent = today.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+document.getElementById('att-date').textContent = today.toLocaleDateString('en-IN');
+
+function init() {
+  const emps = PX.getAllEmployees();
+  const todayStr = PX.getDateStr();
+  const todayAtt = PX.Store.get(PX.KEYS.ATTENDANCE).filter(a => a.attendance_date === todayStr);
+  const active   = emps.filter(e => e.status === 'Active').length;
+  const present  = todayAtt.filter(a => a.status === 'Present').length;
+  const absent   = active - present;
+
+  // Stats
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon blue">👥</div>
+        <span class="stat-change up">+${emps.length}</span>
+      </div>
+      <div class="stat-value">${emps.length}</div>
+      <div class="stat-label">Total Employees</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon green">✅</div>
+        <span class="stat-change up">${present}</span>
+      </div>
+      <div class="stat-value">${present}</div>
+      <div class="stat-label">Present Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon red">❌</div>
+      </div>
+      <div class="stat-value">${absent}</div>
+      <div class="stat-label">Absent Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon amber">💰</div>
+      </div>
+      <div class="stat-value">${active}</div>
+      <div class="stat-label">Active Employees</div>
+    </div>
+  `;
+
+  // Recent employees table
+  const recent = [...emps].reverse().slice(0, 5);
+  document.getElementById('recent-table').innerHTML = recent.map(e => `<tr>
+    <td><span class="emp-id-badge">${e.employee_id}</span></td>
+    <td class="fw-600">${e.first_name} ${e.last_name}</td>
+    <td>${e.department||'-'}</td>
+    <td>${e.status==='Active'?'<span class="badge badge-success">Active</span>':'<span class="badge badge-danger">Inactive</span>'}</td>
+  </tr>`).join('') || '<tr><td colspan="4" class="text-center text-muted" style="padding:24px">No employees found</td></tr>';
+
+  // Today attendance
+  const attEl = document.getElementById('today-attendance');
+  if (todayAtt.length === 0) {
+    attEl.innerHTML = '<div class="text-center text-muted" style="padding:24px">No attendance recorded today</div>';
+  } else {
+    attEl.innerHTML = `<div style="overflow-x:auto"><table>
+      <thead><tr><th>Employee</th><th>In</th><th>Out</th><th>Hours</th></tr></thead>
+      <tbody>${todayAtt.map(a => {
+        const emp = PX.getEmployee(a.employee_id);
+        return `<tr>
+          <td class="fw-600">${emp ? emp.first_name+' '+emp.last_name : a.employee_id}</td>
+          <td class="text-sm">${a.first_in||'-'}</td>
+          <td class="text-sm">${a.last_out||'Still In'}</td>
+          <td class="text-sm fw-600">${a.working_hours||'-'} hrs</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  }
+
+  // Department summary
+  const depts = {};
+  emps.forEach(e => { depts[e.department||'Others'] = (depts[e.department||'Others']||0) + 1; });
+  document.getElementById('dept-summary').innerHTML = Object.entries(depts).map(([d, c]) => `
+    <div style="background:var(--gray-100);border-radius:var(--radius-sm);padding:16px 20px;min-width:140px">
+      <div style="font-size:24px;font-weight:800;color:var(--navy)">${c}</div>
+      <div style="font-size:13px;color:var(--gray-600);margin-top:4px">${d}</div>
+    </div>
+  `).join('');
+}
+
+init();
+</script>
+</body>
+</html>
